@@ -1,6 +1,7 @@
 #include "Board.h"
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 Board::Board(){
@@ -9,6 +10,11 @@ Board::Board(){
 Board::~Board(){
     
 }
+
+void Board::setBoard(int row, int col, string newElement){
+    mBoard[row][col]=newElement;
+}
+
 /* ********************************************************************* 
 Function Name: createBoard 
 Purpose: to create the intial board 
@@ -18,7 +24,9 @@ Return Value: no value returned
 Local Variables: 
             row, and col to print board 
 Algorithm: 
-            1) build board
+            1) get the size of board
+            2) loop over to place in the B O and W's in correct spot
+            3) account for the 4 pieces in the second and second to last row
 Assistance Received: none 
 ********************************************************************* */
 void Board::createBoard(int gridSize){
@@ -58,8 +66,7 @@ Local Variables:
             row --> for looping rows
             col --> for looping columns
 Algorithm: 
-            1)  
-            2) 
+            1)  show a "winning board"
 Assistance Received: none 
 ********************************************************************* */
 void Board::devOption(int gridSize){
@@ -82,8 +89,9 @@ void Board::devOption(int gridSize){
             mBoard[row][col]=piece;
         }
     }
-    mBoard[1][0]="O";
+    mBoard[1][0]="W";
     mBoard[0][2]="O";
+    mBoard[2][2]="W";
     mBoard[1][mGridsize-1]="O";
     mBoard[mGridsize-2][0]="B";
     mBoard[mGridsize-2][mGridsize-1]="B";
@@ -104,7 +112,8 @@ Local Variables:
             newCol --> column of pieces new position
             Cpiece --> BB/WW if piece can capture
 Algorithm: 
-            1)  
+            1)  account of each move user can make (4 options)
+            2) move the piece into the new row and column according to the option
 Assistance Received: none 
 ********************************************************************* */
 void Board::movePiece(int row, int column, string coordinate){
@@ -320,39 +329,149 @@ bool Board::checkWinner(){
     //check the first and last row --> then the 4 other points
     //if all available pieces are in winning position then theres a winner
     for(int row=0; row<mGridsize; row++){
-        
-        //counting the pieces in winning position
-        if(row == 0){
-            wPieces++;
-            cout<<"HEREE"<<wPieces<<endl;
-            
-        }
-        else if(row == mGridsize-1){
-            bPieces++;
-            //cout<<"HEREE"<<bPieces<<endl;
-        }
         for(int col=0; col<mGridsize; col++){
             piece=mBoard[row][col];
-            //counting total pieces on board --> dont care if its in winning positions or not
-            if( piece == "B"){
-                totalB++;
-               // cout<<totalB<<endl;
+            //looking at winning positions and counting 
+            if( piece == "B" && row == mGridsize-1){
+                bPieces++;
             }
-            else if( piece == "W"){
-                totalW++;
+            else if( piece == "BB" && row == mGridsize-1){
+                bPieces++;
             }
-            if((row == 1 && col == 0) || (row == mGridsize-1 && col == 2) ){
-                    wPieces++;
+            else if( piece == "W" && row == 0 ){
+                wPieces++;
             }
-            else if((row == mGridsize-2 && col == 0) || (row == mGridsize-2 && col == mGridsize-1) ){
-                    bPieces++;
+            else if( piece == "WW" && row == 0){
+                wPieces++;
             }
 
-            //counting current pieces
-        }
-        
-        
-        
+            //looking at the whole board --> counting total pieces
+            if(piece =="W" || piece =="WW"){
+                totalW++;
+            }
+            else if(piece =="B" ||piece =="BB"){
+                totalB++;
+            }
+        }  
     }
-    return true;
+
+    //looking at 2nd row and 2nd to last row's
+    if(mBoard[mGridsize-2][0] == "B" || mBoard[mGridsize-2][0] == "BB"){
+        bPieces++;
+    }
+    else if(mBoard[mGridsize-2][mGridsize-1] == "B" || mBoard[mGridsize-2][mGridsize-1] == "BB"){
+        bPieces++;
+    }
+
+    if(mBoard[1][0] == "W" || mBoard[1][0] == "WW"){
+        wPieces++;
+    }
+    else if(mBoard[1][mGridsize-1] == "W" || mBoard[1][mGridsize-1] == "WW"){
+        wPieces++;
+    }
+
+    if(totalW == wPieces){ 
+        return true;
+    }
+    else if(totalB == bPieces){
+        return true;
+    }
+
+    return false;
+}
+
+/* ********************************************************************* 
+Function Name: score 
+Purpose: adds up score of winner. 
+Parameters: 
+            no parameters
+Return Value: returns score
+Local Variables: piece --> holds the B, BB, W, WW
+                Pscore/Cscore --> holds score
+                row/col --> used for looping in for loop
+       
+Algorithm: 
+            1) home pieces 3 1 5 1 3 
+            2) add up all the pieces in home positions
+            3) count number of remaining peices +5 for player who captured
+            5) -5 for player who quits
+Assistance Received: none 
+********************************************************************* */
+int Board::score(string color){
+    string piece;
+    int Pscore=0;
+    string ScorePiece;
+    string ScoreCapture;
+    int Scorerow=0;
+    int OppPieces=0;
+    int SecondScoreRow=0;
+
+
+    if(color =="black"){
+        ScorePiece="B";
+        ScoreCapture="BB";
+        Scorerow=mGridsize-1;
+        SecondScoreRow=mGridsize-2;
+    }
+    else if(color =="white"){
+        ScorePiece="W";
+        ScoreCapture="WW";
+        Scorerow=0;
+        SecondScoreRow=1;
+    }
+
+    for(int row=0; row<mGridsize; row++){
+        for(int col=0; col<mGridsize; col++){
+            piece=mBoard[row][col];
+            //adding scores
+            if((piece == ScorePiece && row==Scorerow) || (piece == ScoreCapture && row ==Scorerow)){
+                //adding 3's
+                if(col==0 || col==mGridsize-1){
+                    Pscore+=3;
+                }
+                //adding 1's
+                if(col==1 || col==mGridsize-2){
+                    Pscore++;
+                }
+                //adding 5's
+                if(col==2 || col==mGridsize-3){
+                    Pscore+=5;
+                }
+                //adding 7's
+                if(mGridsize>5){
+                    if(col==3 || col==mGridsize-4 ){
+                        Pscore+=7;
+                    }  
+                    //adding 9's
+                    if(mGridsize==9 && col==4){
+                        Pscore+=9;
+                    } 
+                }
+                
+            }
+
+            //count up oppentent pieces on board
+            if(piece != ScorePiece && piece != ScoreCapture && piece != "O"){
+                OppPieces++;
+            }
+
+        }
+    }
+
+    //calc captured score
+    int PieceDiff=0;
+    if(OppPieces < mGridsize+2){
+        PieceDiff=mGridsize-OppPieces;
+        Pscore+=PieceDiff*5;
+    }
+    
+    //adding inner one's
+    if(mBoard[SecondScoreRow][0] == ScorePiece || mBoard[SecondScoreRow][0] == ScoreCapture){
+        Pscore++;
+    }
+    else if(mBoard[SecondScoreRow][mGridsize-1] == ScorePiece || mBoard[SecondScoreRow][mGridsize-1] == ScoreCapture){
+        Pscore++;
+    }
+
+    return Pscore;
 }
