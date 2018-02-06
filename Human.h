@@ -7,4 +7,5 @@ class Human: public Player {
     public:
         Human();
         ~Human();
+        Piece Help(Board& table);
 };
