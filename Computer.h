@@ -5,4 +5,8 @@ class Computer : public Player{
     public:
         Computer();
         ~Computer();
+    
+        Piece CMovePiece(Board& table);
+
+        int randNum();
 };
