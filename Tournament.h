@@ -9,7 +9,12 @@ class Tournament{
 
         void playAgain();
 
-        void endTournament();
+
+        void endTournament(int hScore, int cScore);
+
+        int Rounds;
+
+        
     
 
 };
